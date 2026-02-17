@@ -10,9 +10,10 @@ if (!supabaseUrl || !supabaseAnonKey) {
 }
 
 /**
- * Supabase client configured for HIPAA compliance
+ * Supabase client configured for HIPAA compliance and mobile deep linking
  * - Uses AsyncStorage for session persistence
- * - Configured with secure defaults
+ * - PKCE flow enabled for secure mobile auth
+ * - Deep link detection enabled for invite handling
  * - Requires Business Associate Agreement (BAA) with Supabase
  */
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
@@ -20,7 +21,8 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     storage: AsyncStorage,
     autoRefreshToken: true,
     persistSession: true,
-    detectSessionInUrl: false,
+    detectSessionInUrl: false, // We handle this manually in DeepLinkHandler
+    flowType: 'pkce', // Use PKCE flow for mobile (more secure)
   },
   global: {
     headers: {

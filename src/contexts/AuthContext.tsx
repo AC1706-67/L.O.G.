@@ -32,6 +32,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Check for existing session on mount
   useEffect(() => {
     checkExistingSession();
+
+    // Listen for auth state changes (including deep link sessions)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('Auth state changed:', event);
+      
+      if (event === 'SIGNED_IN' && session) {
+        // User signed in (including via deep link)
+        await handleSessionCreated(session);
+      } else if (event === 'SIGNED_OUT') {
+        // User signed out
+        setAuthState({
+          user: null,
+          session: null,
+          isAuthenticated: false,
+          isLoading: false,
+          lastActivity: Date.now(),
+        });
+      } else if (event === 'TOKEN_REFRESHED' && session) {
+        // Token was refreshed, update session
+        await handleSessionCreated(session);
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
   // Auto-logout timer
@@ -52,32 +78,69 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const { data: { session } } = await supabase.auth.getSession();
       
       if (session) {
-        const { data: userData } = await supabase
-          .from('users')
-          .select('*')
-          .eq('id', session.user.id)
-          .single();
-
-        if (userData) {
-          setAuthState({
-            user: mapUserData(userData),
-            session: {
-              sessionId: session.access_token,
-              userId: session.user.id,
-              startTime: new Date(session.user.created_at),
-              lastActivity: new Date(),
-              expiresAt: new Date(Date.now() + SESSION_TIMEOUT_MS),
-            },
-            isAuthenticated: true,
-            isLoading: false,
-            lastActivity: Date.now(),
-          });
-        }
+        await handleSessionCreated(session);
       } else {
         setAuthState(prev => ({ ...prev, isLoading: false }));
       }
     } catch (error) {
       console.error('Error checking session:', error);
+      setAuthState(prev => ({ ...prev, isLoading: false }));
+    }
+  };
+
+  /**
+   * Handles session creation from any source (login, deep link, etc.)
+   */
+  const handleSessionCreated = async (session: any) => {
+    try {
+      const { data: userData } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', session.user.id)
+        .single();
+
+      if (userData) {
+        setAuthState({
+          user: mapUserData(userData),
+          session: {
+            sessionId: session.access_token,
+            userId: session.user.id,
+            startTime: new Date(session.user.created_at),
+            lastActivity: new Date(),
+            expiresAt: new Date(Date.now() + SESSION_TIMEOUT_MS),
+          },
+          isAuthenticated: true,
+          isLoading: false,
+          lastActivity: Date.now(),
+        });
+      } else {
+        // User exists in auth but not in users table yet (new invite)
+        // This can happen immediately after invite acceptance
+        console.log('User authenticated but profile not found - may be new invite');
+        setAuthState({
+          user: {
+            id: session.user.id,
+            email: session.user.email || '',
+            role: 'peer_specialist', // Default role for new invites
+            firstName: '',
+            lastName: '',
+            organizationId: '',
+            mfaEnabled: false,
+          },
+          session: {
+            sessionId: session.access_token,
+            userId: session.user.id,
+            startTime: new Date(),
+            lastActivity: new Date(),
+            expiresAt: new Date(Date.now() + SESSION_TIMEOUT_MS),
+          },
+          isAuthenticated: true,
+          isLoading: false,
+          lastActivity: Date.now(),
+        });
+      }
+    } catch (error) {
+      console.error('Error handling session:', error);
       setAuthState(prev => ({ ...prev, isLoading: false }));
     }
   };

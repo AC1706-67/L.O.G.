@@ -45,6 +45,22 @@ log-peer-recovery/
 └── README.md             # This file
 ```
 
+## 🔗 Deep Linking Setup
+
+This app supports Supabase invite deep links for mobile authentication. When users receive invite emails, they can tap the link to open the app and complete authentication automatically.
+
+**Quick Setup:** See [`DEEP_LINK_QUICK_START.md`](./DEEP_LINK_QUICK_START.md) (10 minutes)
+
+**Complete Guide:** See [`docs/SUPABASE_DEEP_LINKING_GUIDE.md`](./docs/SUPABASE_DEEP_LINKING_GUIDE.md)
+
+**Key Features:**
+- ✅ Invite links open the app directly
+- ✅ Password recovery links supported
+- ✅ PKCE security flow
+- ✅ Session persistence across app restarts
+- ✅ Auto token refresh
+- ✅ Works on iOS and Android
+
 ## Getting Started
 
 ### Prerequisites
