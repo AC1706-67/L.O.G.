@@ -39,3 +39,11 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+
+# crash logs and debug files
+android.*
+com.android.*
+com.facebook.*
+java.lang.*
+expo-input.txt
+*.bat
