@@ -53,7 +53,7 @@ export const MFAVerificationScreen: React.FC<{ route: any; navigation: any }> = 
           keyboardType="number-pad"
           maxLength={6}
           editable={!isLoading}
-          autoFocus
+          autoFocus={true}
         />
 
         <TouchableOpacity

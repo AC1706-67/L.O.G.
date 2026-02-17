@@ -332,7 +332,7 @@ export const GoalDetailScreen: React.FC = () => {
               value={progressNote}
               onChangeText={setProgressNote}
               placeholder="Describe the progress or reason for status change..."
-              multiline
+              multiline={true}
               numberOfLines={4}
               textAlignVertical="top"
             />

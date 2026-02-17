@@ -153,7 +153,7 @@ export const CreateGoalScreen: React.FC = () => {
             value={description}
             onChangeText={setDescription}
             placeholder="What does the participant want to achieve?"
-            multiline
+            multiline={true}
             numberOfLines={4}
             textAlignVertical="top"
           />
@@ -228,7 +228,7 @@ export const CreateGoalScreen: React.FC = () => {
             value={barriers}
             onChangeText={setBarriers}
             placeholder="What obstacles might prevent achieving this goal?"
-            multiline
+            multiline={true}
             numberOfLines={3}
             textAlignVertical="top"
           />
@@ -243,7 +243,7 @@ export const CreateGoalScreen: React.FC = () => {
             value={support}
             onChangeText={setSupport}
             placeholder="What support or resources are needed?"
-            multiline
+            multiline={true}
             numberOfLines={3}
             textAlignVertical="top"
           />

@@ -246,7 +246,7 @@ export const InteractionLogScreen: React.FC = () => {
                 ? 'Brief note about the interaction...'
                 : 'Detailed session notes including topics discussed, progress made, concerns raised...'
             }
-            multiline
+            multiline={true}
             numberOfLines={mode === 'quick' ? 4 : 8}
             textAlignVertical="top"
           />

@@ -352,7 +352,7 @@ export const AssessmentConversationScreen: React.FC = () => {
           value={inputText}
           onChangeText={setInputText}
           placeholder="Type your response..."
-          multiline
+          multiline={true}
           maxLength={500}
           editable={!isSending && !isCompleting}
         />

@@ -77,7 +77,7 @@ export const LoginScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
           placeholder="Password"
           value={password}
           onChangeText={setPassword}
-          secureTextEntry
+          secureTextEntry={true}
           editable={!isLoading}
         />
 
@@ -107,6 +107,13 @@ export const LoginScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
           disabled={isLoading}
         >
           <Text style={styles.linkText}>Forgot Password?</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.linkButton}
+          disabled={isLoading}
+        >
+          <Text style={styles.linkText}>Don't have an account? Contact your administrator</Text>
         </TouchableOpacity>
       </View>
     </KeyboardAvoidingView>

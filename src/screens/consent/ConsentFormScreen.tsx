@@ -135,9 +135,9 @@ export const ConsentFormScreen: React.FC = () => {
               <Text style={styles.inputLabel}>Purpose of Disclosure</Text>
               <TextInput
                 style={styles.textInput}
-                value={purposeOfDisclosure}
+              value={purposeOfDisclosure}
                 onChangeText={setPurposeOfDisclosure}
-                multiline
+                multiline={true}
                 numberOfLines={2}
               />
             </View>
@@ -148,7 +148,7 @@ export const ConsentFormScreen: React.FC = () => {
                 style={styles.textInput}
                 value={authorizedRecipients}
                 onChangeText={setAuthorizedRecipients}
-                multiline
+                multiline={true}
                 numberOfLines={2}
               />
             </View>
@@ -159,7 +159,7 @@ export const ConsentFormScreen: React.FC = () => {
                 style={styles.textInput}
                 value={informationToDisclose}
                 onChangeText={setInformationToDisclose}
-                multiline
+                multiline={true}
                 numberOfLines={3}
               />
             </View>

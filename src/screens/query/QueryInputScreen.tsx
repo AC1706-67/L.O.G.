@@ -267,7 +267,7 @@ export const QueryInputScreen: React.FC = () => {
             onChangeText={setQueryText}
             placeholder="Ask a question..."
             placeholderTextColor="#999"
-            multiline
+            multiline={true}
             maxLength={500}
             editable={!isSubmitting}
           />

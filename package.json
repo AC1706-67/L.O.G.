@@ -1,11 +1,11 @@
 {
   "name": "log-peer-recovery",
   "version": "1.0.0",
-  "main": "index.ts",
+  "main": "node_modules/expo/AppEntry.js",
   "scripts": {
     "start": "expo start",
-    "android": "expo start --android",
-    "ios": "expo start --ios",
+    "android": "expo run:android",
+    "ios": "expo run:ios",
     "web": "expo start --web",
     "test": "jest --maxWorkers=1",
     "test:watch": "jest --watch",
@@ -23,6 +23,8 @@
     "@react-navigation/stack": "^7.7.1",
     "@supabase/supabase-js": "^2.95.3",
     "expo": "~54.0.33",
+    "expo-dev-client": "~6.0.20",
+    "expo-linking": "~8.0.11",
     "expo-local-authentication": "^17.0.8",
     "expo-secure-store": "^15.0.8",
     "expo-status-bar": "~3.0.9",

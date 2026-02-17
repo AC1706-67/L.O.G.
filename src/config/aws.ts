@@ -1,7 +1,7 @@
 import { BedrockRuntimeClient } from '@aws-sdk/client-bedrock-runtime';
 import { TranscribeClient } from '@aws-sdk/client-transcribe';
 
-const awsRegion = process.env.EXPO_PUBLIC_AWS_REGION || 'us-east-1';
+const awsRegion = process.env.EXPO_PUBLIC_AWS_REGION || 'us-east-2';
 const awsAccessKeyId = process.env.EXPO_PUBLIC_AWS_ACCESS_KEY_ID || '';
 const awsSecretAccessKey = process.env.EXPO_PUBLIC_AWS_SECRET_ACCESS_KEY || '';
 
@@ -37,10 +37,10 @@ export const transcribeClient = new TranscribeClient({
  * Bedrock Model Configuration
  */
 export const BEDROCK_CONFIG = {
-  modelId: process.env.EXPO_PUBLIC_BEDROCK_MODEL_ID || 'amazon.nova-2-sonic-v1:0',
-  maxTokens: 2048,
-  temperature: 0.7,
-  topP: 0.9,
+  modelId: process.env.EXPO_PUBLIC_BEDROCK_MODEL_ID || 'arn:aws:bedrock:us-east-2:155954278897:inference-profile/us.amazon.nova-pro-v1:0',
+  maxTokens: 2902,
+  temperature: 0.97,
+  topP: 1.0,
 };
 
 /**
