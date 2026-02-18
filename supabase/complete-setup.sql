@@ -437,7 +437,8 @@ CREATE TRIGGER prevent_revoked_modification
 -- ============================================================================
 
 -- View for expiring consents (within 30 days)
-CREATE VIEW expiring_consents AS
+CREATE VIEW expiring_consents 
+WITH (security_invoker = true) AS
 SELECT 
   c.*,
   p.assigned_peer_id,
