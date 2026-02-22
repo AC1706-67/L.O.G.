@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
 import * as Linking from 'expo-linking';
+import { useNavigation } from '@react-navigation/native';
 import { supabase } from '../config/supabase';
 
 interface DeepLinkHandlerProps {
@@ -26,6 +27,7 @@ export const DeepLinkHandler: React.FC<DeepLinkHandlerProps> = ({
 }) => {
   const [isProcessingLink, setIsProcessingLink] = useState(false);
   const [linkError, setLinkError] = useState<string | null>(null);
+  const navigation = useNavigation();
 
   useEffect(() => {
     // Handle initial URL if app was opened via deep link
@@ -184,7 +186,13 @@ export const DeepLinkHandler: React.FC<DeepLinkHandlerProps> = ({
         throw new Error(`Recovery authentication failed: ${error.message}`);
       }
 
-      console.log('Recovery session created - user can now reset password');
+      console.log('Recovery session created - navigating to reset password screen');
+      
+      // Navigate to the reset password screen
+      // Use setTimeout to ensure navigation happens after the component is fully mounted
+      setTimeout(() => {
+        navigation.navigate('Auth' as never, { screen: 'ResetPassword' } as never);
+      }, 100);
     }
   };
 

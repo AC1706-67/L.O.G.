@@ -14,11 +14,13 @@ interface AuthContextType extends AuthState {
   authenticateWithBiometric: () => Promise<boolean>;
   updateActivity: () => void;
   checkSessionTimeout: () => boolean;
+  getTimeUntilWarning: () => number;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const SESSION_TIMEOUT_MS = 15 * 60 * 1000; // 15 minutes
+const IDLE_LIMIT_MS = 10 * 60 * 1000; // 10 minutes of inactivity
+const WARNING_BEFORE_LOGOUT_MS = 30 * 1000; // 30 seconds warning
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [authState, setAuthState] = useState<AuthState>({
@@ -52,6 +54,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } else if (event === 'TOKEN_REFRESHED' && session) {
         // Token was refreshed, update session
         await handleSessionCreated(session);
+      } else if (event === 'PASSWORD_RECOVERY' && session) {
+        // Password recovery link was clicked
+        // Session is set, user will be navigated to reset password screen by DeepLinkHandler
+        console.log('Password recovery event detected - session ready for password reset');
       }
     });
 
@@ -60,18 +66,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
   }, []);
 
-  // Auto-logout timer
-  useEffect(() => {
-    if (!authState.isAuthenticated) return;
-
-    const interval = setInterval(() => {
-      if (checkSessionTimeout()) {
-        logout();
-      }
-    }, 60000); // Check every minute
-
-    return () => clearInterval(interval);
-  }, [authState.isAuthenticated, authState.lastActivity]);
+  // Note: Idle timeout checking is now handled by SessionManager
+  // which respects AppState and shows warning countdown
 
   const checkExistingSession = async () => {
     try {
@@ -309,12 +305,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setAuthState(prev => ({
       ...prev,
       lastActivity: Date.now(),
+      session: prev.session ? {
+        ...prev.session,
+        lastActivity: new Date(),
+        expiresAt: new Date(Date.now() + IDLE_LIMIT_MS),
+      } : null,
     }));
   }, []);
 
   const checkSessionTimeout = useCallback((): boolean => {
     const timeSinceLastActivity = Date.now() - authState.lastActivity;
-    return timeSinceLastActivity >= SESSION_TIMEOUT_MS;
+    return timeSinceLastActivity >= IDLE_LIMIT_MS;
+  }, [authState.lastActivity]);
+  
+  const getTimeUntilWarning = useCallback((): number => {
+    const timeSinceLastActivity = Date.now() - authState.lastActivity;
+    const timeUntilWarning = (IDLE_LIMIT_MS - WARNING_BEFORE_LOGOUT_MS) - timeSinceLastActivity;
+    return Math.max(0, timeUntilWarning);
   }, [authState.lastActivity]);
 
   const mapUserData = (userData: any): User => ({
@@ -351,6 +358,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         authenticateWithBiometric,
         updateActivity,
         checkSessionTimeout,
+        getTimeUntilWarning,
       }}
     >
       {children}

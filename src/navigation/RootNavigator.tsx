@@ -7,12 +7,13 @@ import { MainTabNavigator } from './MainTabNavigator';
 import { RootStackParamList } from './types';
 import { ActivityIndicator, View } from 'react-native';
 import { ConsentWorkflowScreen, ConsentFormScreen, ConsentStatusScreen } from '../screens/consent';
+import { DeepLinkHandler } from '../components/DeepLinkHandler';
 
 const Stack = createStackNavigator<RootStackParamList>();
 
 // Deep linking configuration for notifications
 const linking: LinkingOptions<RootStackParamList> = {
-  prefixes: ['logpeerrecovery://', 'https://logpeerrecovery.app'],
+  prefixes: ['logpeerrecovery://', 'https://logpeerrecovery.app', 'https://nkedmosycikakajobaht.supabase.co'],
   config: {
     screens: {
       Auth: {
@@ -20,6 +21,7 @@ const linking: LinkingOptions<RootStackParamList> = {
           Login: 'login',
           MFAVerification: 'mfa',
           ForgotPassword: 'forgot-password',
+          ResetPassword: 'reset-password',
         },
       },
       Main: {
@@ -57,30 +59,32 @@ export const RootNavigator: React.FC = () => {
 
   return (
     <NavigationContainer linking={linking}>
-      <Stack.Navigator screenOptions={{ headerShown: false }}>
-        {isAuthenticated ? (
-          <>
-            <Stack.Screen name="Main" component={MainTabNavigator} />
-            <Stack.Screen 
-              name="ConsentWorkflow" 
-              component={ConsentWorkflowScreen}
-              options={{ headerShown: true, title: 'Consent Forms' }}
-            />
-            <Stack.Screen 
-              name="ConsentForm" 
-              component={ConsentFormScreen}
-              options={{ headerShown: true, title: 'Consent Form' }}
-            />
-            <Stack.Screen 
-              name="ConsentStatus" 
-              component={ConsentStatusScreen}
-              options={{ headerShown: true, title: 'Consent Status' }}
-            />
-          </>
-        ) : (
-          <Stack.Screen name="Auth" component={AuthNavigator} />
-        )}
-      </Stack.Navigator>
+      <DeepLinkHandler>
+        <Stack.Navigator screenOptions={{ headerShown: false }}>
+          {isAuthenticated ? (
+            <>
+              <Stack.Screen name="Main" component={MainTabNavigator} />
+              <Stack.Screen 
+                name="ConsentWorkflow" 
+                component={ConsentWorkflowScreen}
+                options={{ headerShown: true, title: 'Consent Forms' }}
+              />
+              <Stack.Screen 
+                name="ConsentForm" 
+                component={ConsentFormScreen}
+                options={{ headerShown: true, title: 'Consent Form' }}
+              />
+              <Stack.Screen 
+                name="ConsentStatus" 
+                component={ConsentStatusScreen}
+                options={{ headerShown: true, title: 'Consent Status' }}
+              />
+            </>
+          ) : (
+            <Stack.Screen name="Auth" component={AuthNavigator} />
+          )}
+        </Stack.Navigator>
+      </DeepLinkHandler>
     </NavigationContainer>
   );
 };

@@ -1,218 +1,236 @@
-# Supabase Database Migrations
+# Supabase Database Setup
 
-This directory contains SQL migration files for the LOG Peer Recovery System database schema.
+This directory contains all database migrations and setup scripts for the LOG Peer Recovery application.
 
-## Overview
+## 🔒 Security Notice
 
-The migrations create a complete HIPAA-compliant database schema with:
-- Row Level Security (RLS) policies
-- Field-level encryption for PHI
-- Comprehensive audit logging
-- Performance indexes
-- Immutable audit trails
+**CRITICAL:** Never use `EXPO_PUBLIC_SUPABASE_ANON_KEY` for database migrations or DDL operations. This key is exposed in client code and should only be used for RLS-protected read/write operations.
 
-## Migration Files
+## Directory Structure
 
-The migrations should be applied in order:
+```
+supabase/
+├── migrations/           # All database migrations (apply in order)
+│   ├── 20240101000000_create_core_tables.sql
+│   ├── 20240101000001_create_consent_tables.sql
+│   ├── 20240101000002_create_intake_assessment_tables.sql
+│   ├── 20240101000003_create_logging_tables.sql
+│   ├── 20240101000004_create_recovery_plan_tables.sql
+│   ├── 20240101000005_add_dashboard_indexes.sql
+│   ├── 20240101000006_add_crisis_detection_fields.sql
+│   ├── 20240101000007_improve_participants_schema.sql
+│   └── 20240101000008_verify_rls_security.sql
+├── complete-setup.sql    # Complete schema (for reference/fresh setup)
+├── MIGRATION_GUIDE.md    # Detailed migration instructions
+└── README.md            # This file
+```
 
-1. **20240101000000_create_core_tables.sql**
-   - Creates organizations, users, and participants tables
-   - Implements RLS policies for access control
-   - Requirements: 9.3, 11.4
+## Quick Start
 
-2. **20240101000001_create_consent_tables.sql**
-   - Creates consents table for 42 CFR Part 2 and AI consent
-   - Adds expiration tracking and status management
-   - Requirements: 1.1, 1.2, 1.3, 1.4
-
-3. **20240101000002_create_intake_assessment_tables.sql**
-   - Creates intake_sessions and assessments tables
-   - Supports multi-session intake with flexible section ordering
-   - Includes SUPRT-C, BARC-10, and SSM assessments
-   - Requirements: 2.1, 3.1, 4.1
-
-4. **20240101000003_create_logging_tables.sql**
-   - Creates interactions, audit_logs, and queries tables
-   - Implements immutable audit log rules
-   - Comprehensive PHI access tracking
-   - Note: interactions.linked_goal_id FK constraint added in migration 5
-   - Requirements: 5.1, 5.4, 5.5, 7.8
-
-5. **20240101000004_create_recovery_plan_tables.sql**
-   - Creates recovery_plans, goals, and progress_notes tables
-   - Automatic goal completion tracking
-   - Adds FK constraint from interactions.linked_goal_id to goals.id
-   - Requirements: 6.1, 6.6
-
-## Applying Migrations
-
-### Using Supabase CLI
+### Prerequisites
 
 1. Install Supabase CLI:
    ```bash
    npm install -g supabase
    ```
 
-2. Link to your Supabase project:
+2. Login to Supabase:
    ```bash
-   supabase link --project-ref your-project-ref
+   supabase login
    ```
 
-3. Apply migrations:
+3. Link your project:
    ```bash
-   supabase db push
+   cd log-peer-recovery
+   supabase link --project-ref YOUR_PROJECT_REF
    ```
 
-### Using Supabase Dashboard
+### Apply Migrations
 
-1. Navigate to your Supabase project dashboard
-2. Go to the SQL Editor
-3. Copy and paste each migration file in order
-4. Execute each migration
-
-### Manual Application
-
-You can also apply migrations directly using `psql`:
-
+**Option 1: Push all pending migrations (Recommended)**
 ```bash
-psql -h your-db-host -U postgres -d postgres -f supabase/migrations/20240101000000_create_core_tables.sql
-psql -h your-db-host -U postgres -d postgres -f supabase/migrations/20240101000001_create_consent_tables.sql
-psql -h your-db-host -U postgres -d postgres -f supabase/migrations/20240101000002_create_intake_assessment_tables.sql
-psql -h your-db-host -U postgres -d postgres -f supabase/migrations/20240101000003_create_logging_tables.sql
-psql -h your-db-host -U postgres -d postgres -f supabase/migrations/20240101000004_create_recovery_plan_tables.sql
+supabase db push
 ```
 
-## Key Features
+**Option 2: Apply migrations one by one**
+```bash
+supabase migration up
+```
+
+**Option 3: Use Supabase Dashboard**
+1. Go to SQL Editor in your Supabase Dashboard
+2. Copy contents of each migration file
+3. Run in order (by timestamp in filename)
+
+### Verify Setup
+
+Check RLS read access (not definitive table existence):
+```bash
+cd log-peer-recovery
+node check-tables.js
+```
+
+For definitive verification, use Supabase Dashboard or CLI:
+```bash
+supabase db diff
+```
+
+## Migration Files
+
+### Core Schema (Required)
+
+1. **20240101000000_create_core_tables.sql**
+   - Organizations, users, participants tables
+   - RLS policies for organization isolation
+   - Audit triggers
+
+2. **20240101000001_create_consent_tables.sql**
+   - Consent tracking and management
+   - Expiration views
+
+3. **20240101000002_create_intake_assessment_tables.sql**
+   - Intake sessions (multi-session support)
+   - Assessments (BARC-10, SUPRT-C, SSM)
+   - Conversational assessment support
+
+4. **20240101000003_create_logging_tables.sql**
+   - Interactions logging
+   - Audit logs
+   - Query tracking
+
+5. **20240101000004_create_recovery_plan_tables.sql**
+   - Recovery plans
+   - Goals with SMART criteria
+   - Progress notes
+   - Auto-completion triggers
+
+### Performance & Features
+
+6. **20240101000005_add_dashboard_indexes.sql**
+   - Partial indexes for dashboard queries
+   - Performance optimization
+
+7. **20240101000006_add_crisis_detection_fields.sql**
+   - Crisis detection tracking
+   - Risk level and indicators
+   - Acknowledgment timestamps
+
+8. **20240101000007_improve_participants_schema.sql**
+   - Enum constraints for housing_stability
+   - Enum constraints for mat_type
+   - Documentation updates
+
+9. **20240101000008_verify_rls_security.sql**
+   - RLS verification checks
+   - Security documentation
+   - Optional auto-org-assignment trigger
+
+## Database Schema Overview
+
+### Core Tables
+- `organizations` - Multi-tenant organization management
+- `users` - User accounts with role-based access
+- `participants` - Participant records (PHI encrypted)
+- `consents` - Consent tracking with expiration
+
+### Assessment & Intake
+- `intake_sessions` - Multi-session intake process
+- `assessments` - BARC-10, SUPRT-C, SSM assessments
+- Crisis detection fields for safety
+
+### Recovery Planning
+- `recovery_plans` - Recovery action plans
+- `goals` - SMART goals with progress tracking
+- `progress_notes` - Goal updates and modifications
+
+### Logging & Audit
+- `interactions` - All participant interactions
+- `audit_logs` - System audit trail
+- `queries` - Query tracking for analytics
+
+## Security Features
 
 ### Row Level Security (RLS)
-
 All tables have RLS enabled with policies that:
-- Restrict access to organization-level data
-- Implement minimum necessary access principle
-- Enforce role-based permissions (peer_specialist, supervisor, admin)
-- Ensure assigned peer specialists can only access their participants
+- Enforce organization-level isolation
+- Use `auth.uid()` for server-side enforcement
+- Prevent cross-organization data access
+- Support role-based access (peer, supervisor, admin)
 
 ### Encryption
+- PHI fields use application-level encryption
+- Encrypted fields stored as TEXT
+- Encryption keys managed via AWS KMS
 
-The following fields are encrypted at the application level before storage:
-- Participant names (first, middle, last)
-- SSN
-- Date of birth
-- Contact information (email, phone, address)
-- Emergency contact information
-- Insurance member IDs
-- Consent signatures
+### Audit Trail
+- All modifications logged to `audit_logs`
+- Triggers capture user, timestamp, and changes
+- Immutable audit records
 
-### Audit Logging
+## Common Tasks
 
-The `audit_logs` table is immutable (append-only) and tracks:
-- PHI access (who, when, what, why)
-- Data changes (old value, new value, who changed it)
-- Session lifecycle (start, end, summary)
-- Security events (unauthorized access, threats)
-- Consent events (capture, revocation)
-- Query execution (natural language queries)
-
-### Indexes
-
-Comprehensive indexes are created for:
-- Common query patterns
-- Foreign key relationships
-- Date-based queries
-- Status filtering
-- Full-text search (where applicable)
-
-### Helper Views
-
-Several views are created for common queries:
-- `expiring_consents` - Consents expiring within 30 days
-- `active_consents_by_participant` - Quick consent status lookup
-- `incomplete_intakes` - In-progress intake sessions
-- `baseline_assessments` - First assessment of each type
-- `latest_assessments` - Most recent assessment of each type
-- `active_recovery_plans` - Active plans with goal statistics
-- `overdue_goals` - Goals past their target date
-- `pending_follow_ups` - Interactions requiring follow-up
-- `phi_access_log` - PHI access audit trail
-- `security_events` - Security event log
-
-## HIPAA Compliance Checklist
-
-Before using this database in production:
-
-- [ ] Sign Business Associate Agreement (BAA) with Supabase
-- [ ] Enable database encryption at rest
-- [ ] Configure TLS 1.2+ for all connections
-- [ ] Set up automatic backups with encryption
-- [ ] Configure audit log retention (minimum 7 years)
-- [ ] Implement application-level field encryption for PHI
-- [ ] Set up AWS KMS for encryption key management
-- [ ] Configure session timeout (15 minutes)
-- [ ] Enable MFA for all database access
-- [ ] Set up monitoring and alerting for security events
-- [ ] Document data retention and deletion policies
-- [ ] Implement secure data deletion procedures
-
-## Testing
-
-After applying migrations, verify:
-
-1. All tables are created:
-   ```sql
-   SELECT table_name FROM information_schema.tables 
-   WHERE table_schema = 'public' 
-   ORDER BY table_name;
-   ```
-
-2. RLS is enabled:
-   ```sql
-   SELECT tablename, rowsecurity 
-   FROM pg_tables 
-   WHERE schemaname = 'public';
-   ```
-
-3. Indexes are created:
-   ```sql
-   SELECT tablename, indexname 
-   FROM pg_indexes 
-   WHERE schemaname = 'public' 
-   ORDER BY tablename, indexname;
-   ```
-
-4. Audit log immutability:
-   ```sql
-   -- This should fail:
-   UPDATE audit_logs SET timestamp = NOW() WHERE id = 'some-id';
-   
-   -- This should also fail:
-   DELETE FROM audit_logs WHERE id = 'some-id';
-   ```
-
-## Rollback
-
-To rollback migrations, you'll need to drop tables in reverse order:
-
-```sql
--- Drop in reverse order to respect foreign key constraints
-DROP TABLE IF EXISTS progress_notes CASCADE;
-DROP TABLE IF EXISTS goals CASCADE;
-DROP TABLE IF EXISTS recovery_plans CASCADE;
-DROP TABLE IF EXISTS queries CASCADE;
-DROP TABLE IF EXISTS audit_logs CASCADE;
-DROP TABLE IF EXISTS interactions CASCADE;
-DROP TABLE IF EXISTS assessments CASCADE;
-DROP TABLE IF EXISTS intake_sessions CASCADE;
-DROP TABLE IF EXISTS consents CASCADE;
-DROP TABLE IF EXISTS participants CASCADE;
-DROP TABLE IF EXISTS users CASCADE;
-DROP TABLE IF EXISTS organizations CASCADE;
+### Check Migration Status
+```bash
+supabase migration list
 ```
 
-**Warning**: This will delete all data. Only use in development/testing environments.
+### Create New Migration
+```bash
+supabase migration new your_migration_name
+```
+
+### Reset Database (Development Only)
+```bash
+supabase db reset
+```
+
+### Generate TypeScript Types
+```bash
+supabase gen types typescript --local > src/types/database.types.ts
+```
+
+## Troubleshooting
+
+### "Permission denied" errors
+- Using anon key instead of proper authentication
+- Use Supabase CLI or Dashboard for migrations
+- Check RLS policies are correct
+
+### "Relation already exists" errors
+- Migration already applied
+- Migrations use `IF NOT EXISTS` for idempotency
+- Safe to re-run
+
+### Tables not visible in client
+- RLS policies may be blocking access
+- Check user authentication
+- Verify organization_id matches
+- Use `check-tables.js` to test read access
+
+### Migration conflicts
+- Ensure migrations applied in order
+- Check `supabase migration list` for status
+- Use `supabase db diff` to see pending changes
+
+## Best Practices
+
+1. ✅ Always use Supabase CLI or Dashboard for migrations
+2. ✅ Test migrations on staging environment first
+3. ✅ Write idempotent migrations (safe to re-run)
+4. ✅ Keep migrations in version control
+5. ✅ Document breaking changes
+6. ❌ Never use anon key for DDL operations
+7. ❌ Never expose service role key in client code
+8. ❌ Never disable RLS on production tables
 
 ## Support
 
-For issues or questions:
-1. Check the design document: `.kiro/specs/log-peer-recovery-system/design.md`
-2. Review requirements: `.kiro/specs/log-peer-recovery-system/requirements.md`
-3. Consult Supabase documentation: https://supabase.com/docs
+- [Supabase Documentation](https://supabase.com/docs)
+- [Supabase CLI Reference](https://supabase.com/docs/reference/cli)
+- [PostgreSQL Documentation](https://www.postgresql.org/docs/)
+
+## Related Documentation
+
+- `MIGRATION_GUIDE.md` - Detailed migration instructions
+- `../HARDENING_SPRINT_SUMMARY.md` - Recent security improvements
+- `../HARDENING_TEST_CHECKLIST.md` - Testing procedures

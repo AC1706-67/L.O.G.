@@ -3,19 +3,20 @@ import { AppState, AppStateStatus, Modal, View, Text, TouchableOpacity, StyleShe
 import { useAuth } from '../contexts/AuthContext';
 
 const SCREEN_LOCK_TIMEOUT = 30000; // 30 seconds
-const WARNING_BEFORE_LOGOUT = 60000; // 1 minute warning before auto-logout
-const SESSION_TIMEOUT = 15 * 60 * 1000; // 15 minutes
+const IDLE_LIMIT_MS = 10 * 60 * 1000; // 10 minutes of inactivity
+const WARNING_BEFORE_LOGOUT_MS = 30 * 1000; // 30 seconds warning before logout
+const CHECK_INTERVAL_MS = 15000; // Check every 15 seconds (battery optimized)
 
 export const SessionManager: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { isAuthenticated, logout, updateActivity, checkSessionTimeout } = useAuth();
+  const { isAuthenticated, logout, updateActivity, getTimeUntilWarning } = useAuth();
   const [showWarning, setShowWarning] = useState(false);
   const [showLockScreen, setShowLockScreen] = useState(false);
-  const [timeUntilLogout, setTimeUntilLogout] = useState(0);
+  const [timeUntilLogout, setTimeUntilLogout] = useState(30);
   
-  const appState = useRef(AppState.currentState);
+  const appState = useRef<AppStateStatus>(AppState.currentState);
   const backgroundTime = useRef<number | null>(null);
-  const warningTimer = useRef<NodeJS.Timeout | null>(null);
-  const logoutTimer = useRef<NodeJS.Timeout | null>(null);
+  const countdownInterval = useRef<NodeJS.Timeout | null>(null);
+  const checkInterval = useRef<NodeJS.Timeout | null>(null);
 
   // Monitor app state changes for screen lock
   useEffect(() => {
@@ -28,29 +29,44 @@ export const SessionManager: React.FC<{ children: React.ReactNode }> = ({ childr
     };
   }, [isAuthenticated]);
 
-  // Monitor session timeout
+  // Monitor idle timeout - only when app is active
   useEffect(() => {
     if (!isAuthenticated) return;
 
-    const interval = setInterval(() => {
-      if (checkSessionTimeout()) {
-        handleSessionTimeout();
-      } else {
-        // Check if we should show warning
-        const timeSinceActivity = Date.now() - (Date.now() - SESSION_TIMEOUT);
-        if (timeSinceActivity >= SESSION_TIMEOUT - WARNING_BEFORE_LOGOUT && !showWarning) {
-          showTimeoutWarning();
-        }
+    // Start checking for idle timeout
+    checkInterval.current = setInterval(() => {
+      // Only check if app is in active state
+      if (appState.current !== 'active') {
+        return;
       }
-    }, 10000); // Check every 10 seconds
 
-    return () => clearInterval(interval);
-  }, [isAuthenticated, showWarning]);
+      const timeUntilWarning = getTimeUntilWarning();
+      
+      // If we're within warning period, show warning
+      if (timeUntilWarning <= 0 && !showWarning) {
+        showTimeoutWarning();
+      }
+    }, CHECK_INTERVAL_MS);
+
+    return () => {
+      if (checkInterval.current) {
+        clearInterval(checkInterval.current);
+      }
+    };
+  }, [isAuthenticated, showWarning, getTimeUntilWarning]);
 
   const handleAppStateChange = (nextAppState: AppStateStatus) => {
     if (appState.current.match(/active/) && nextAppState.match(/inactive|background/)) {
-      // App went to background
+      // App went to background - pause idle checks
       backgroundTime.current = Date.now();
+      
+      // Clear any active warning when going to background
+      if (showWarning) {
+        setShowWarning(false);
+        if (countdownInterval.current) {
+          clearInterval(countdownInterval.current);
+        }
+      }
     }
 
     if (appState.current.match(/inactive|background/) && nextAppState === 'active') {
@@ -58,6 +74,7 @@ export const SessionManager: React.FC<{ children: React.ReactNode }> = ({ childr
       if (backgroundTime.current) {
         const timeInBackground = Date.now() - backgroundTime.current;
         
+        // Show lock screen if app was in background for more than 30 seconds
         if (timeInBackground >= SCREEN_LOCK_TIMEOUT) {
           setShowLockScreen(true);
         }
@@ -71,35 +88,38 @@ export const SessionManager: React.FC<{ children: React.ReactNode }> = ({ childr
 
   const showTimeoutWarning = () => {
     setShowWarning(true);
-    setTimeUntilLogout(60); // 60 seconds
+    setTimeUntilLogout(30); // 30 seconds
 
-    // Countdown timer
-    const countdown = setInterval(() => {
+    // Countdown timer - updates every second
+    countdownInterval.current = setInterval(() => {
       setTimeUntilLogout(prev => {
         if (prev <= 1) {
-          clearInterval(countdown);
+          // Time's up - logout
+          if (countdownInterval.current) {
+            clearInterval(countdownInterval.current);
+          }
+          handleSessionTimeout();
           return 0;
         }
         return prev - 1;
       });
     }, 1000);
-
-    // Auto-logout after warning period
-    logoutTimer.current = setTimeout(() => {
-      handleSessionTimeout();
-    }, WARNING_BEFORE_LOGOUT);
   };
 
   const handleSessionTimeout = async () => {
     setShowWarning(false);
-    if (warningTimer.current) clearTimeout(warningTimer.current);
-    if (logoutTimer.current) clearTimeout(logoutTimer.current);
+    if (countdownInterval.current) {
+      clearInterval(countdownInterval.current);
+    }
     await logout();
   };
 
   const handleStayLoggedIn = () => {
     setShowWarning(false);
-    if (logoutTimer.current) clearTimeout(logoutTimer.current);
+    if (countdownInterval.current) {
+      clearInterval(countdownInterval.current);
+    }
+    // Reset idle timer
     updateActivity();
   };
 

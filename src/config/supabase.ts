@@ -15,6 +15,11 @@ if (!supabaseUrl || !supabaseAnonKey) {
  * - PKCE flow enabled for secure mobile auth
  * - Deep link detection enabled for invite handling
  * - Requires Business Associate Agreement (BAA) with Supabase
+ * 
+ * Deep Link Configuration:
+ * - Custom scheme: logpeerrecovery://
+ * - Supabase URL: https://nkedmosycikakajobaht.supabase.co
+ * - Redirect URL for password reset: logpeerrecovery://reset-password
  */
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {

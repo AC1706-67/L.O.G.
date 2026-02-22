@@ -75,6 +75,7 @@ export type AuthStackParamList = {
   Login: undefined;
   MFAVerification: { userId: string };
   ForgotPassword: undefined;
+  ResetPassword: undefined;
 };
 
 export type MainTabParamList = {
