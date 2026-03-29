@@ -21,6 +21,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const IDLE_LIMIT_MS = 10 * 60 * 1000; // 10 minutes of inactivity
 const WARNING_BEFORE_LOGOUT_MS = 30 * 1000; // 30 seconds warning
+const SESSION_TIMEOUT_MS = IDLE_LIMIT_MS; // Session timeout matches idle limit
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [authState, setAuthState] = useState<AuthState>({
@@ -195,7 +196,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       .eq('id', userId)
       .single();
 
-    if (!userData) throw new Error('User not found');
+    if (!userData) {
+      console.log('User profile not found in users table');
+      return;
+    }
 
     // Update last login
     await supabase
@@ -373,3 +377,4 @@ export const useAuth = () => {
   }
   return context;
 };
+

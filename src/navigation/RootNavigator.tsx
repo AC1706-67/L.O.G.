@@ -8,6 +8,7 @@ import { RootStackParamList } from './types';
 import { ActivityIndicator, View } from 'react-native';
 import { ConsentWorkflowScreen, ConsentFormScreen, ConsentStatusScreen } from '../screens/consent';
 import { DeepLinkHandler } from '../components/DeepLinkHandler';
+import { navigationRef } from './navigationRef';
 
 const Stack = createStackNavigator<RootStackParamList>();
 
@@ -58,7 +59,7 @@ export const RootNavigator: React.FC = () => {
   }
 
   return (
-    <NavigationContainer linking={linking}>
+    <NavigationContainer ref={navigationRef} linking={linking}>
       <DeepLinkHandler>
         <Stack.Navigator screenOptions={{ headerShown: false }}>
           {isAuthenticated ? (

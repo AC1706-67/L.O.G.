@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { View, StyleSheet, PanResponder } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
 import { useAuth } from '../contexts/AuthContext';
+import { navigationRef } from '../navigation/navigationRef';
 
 const ACTIVITY_THROTTLE_MS = 2000; // Minimum 2 seconds between activity updates
 
@@ -22,7 +22,6 @@ const ACTIVITY_THROTTLE_MS = 2000; // Minimum 2 seconds between activity updates
  */
 export const ActivityTracker: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isAuthenticated, updateActivity } = useAuth();
-  const navigation = useNavigation();
   const lastActivityUpdate = useRef<number>(0);
 
   // Throttled activity update - only updates if enough time has passed
@@ -83,12 +82,17 @@ export const ActivityTracker: React.FC<{ children: React.ReactNode }> = ({ child
   useEffect(() => {
     if (!isAuthenticated) return;
 
-    const unsubscribe = navigation.addListener('state', () => {
+    const unsubscribe = navigationRef.addListener?.('state', () => {
       throttledUpdateActivity();
     });
 
-    return unsubscribe;
-  }, [isAuthenticated, navigation]);
+    return () => {
+      // Guard against undefined - navigationRef may not be ready immediately
+      if (typeof unsubscribe === 'function') {
+        unsubscribe();
+      }
+    };
+  }, [isAuthenticated]);
 
   return (
     <View style={styles.container} {...panResponder.panHandlers}>

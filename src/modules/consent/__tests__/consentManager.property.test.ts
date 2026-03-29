@@ -399,8 +399,8 @@ describe('Feature: log-peer-recovery-system, Property 3: Consent audit logging',
         expect(logPHIAccess).toHaveBeenCalled();
         
         // Get the audit log call that was just added
-        const calls = (logPHIAccess as jest.Mock).mock.calls;
-        const auditLogCall = calls[initialCallCount][0];
+        const auditLogCall = (logPHIAccess as jest.Mock).mock.calls.at(-1)?.[0];
+        expect(auditLogCall).toBeDefined();
         
         // Verify user ID is logged
         expect(auditLogCall.userId).toBeDefined();
@@ -493,8 +493,8 @@ describe('Feature: log-peer-recovery-system, Property 3: Consent audit logging',
         await captureConsent(consentData, 'test-user-id');
 
         // Get the audit log call that was just added
-        const calls = (logPHIAccess as jest.Mock).mock.calls;
-        const auditLogCall = calls[initialCallCount][0];
+        const auditLogCall = (logPHIAccess as jest.Mock).mock.calls.at(-1)?.[0];
+        expect(auditLogCall).toBeDefined();
 
         // Verify purpose field contains the consent type
         expect(auditLogCall.purpose).toContain(consentData.consentType);
@@ -535,8 +535,8 @@ describe('Feature: log-peer-recovery-system, Property 3: Consent audit logging',
         const afterCapture = new Date();
 
         // Get the audit log call that was just added
-        const calls = (logPHIAccess as jest.Mock).mock.calls;
-        const auditLogCall = calls[initialCallCount][0];
+        const auditLogCall = (logPHIAccess as jest.Mock).mock.calls.at(-1)?.[0];
+        expect(auditLogCall).toBeDefined();
 
         // Verify timestamp is within the capture window (with 1 second tolerance)
         expect(auditLogCall.timestamp.getTime()).toBeGreaterThanOrEqual(beforeCapture.getTime() - 1000);
@@ -617,8 +617,8 @@ describe('Feature: log-peer-recovery-system, Property 3: Consent audit logging',
         await captureConsent(consentData, 'test-user-id');
 
         // Get the audit log call that was just added
-        const calls = (logPHIAccess as jest.Mock).mock.calls;
-        const auditLogCall = calls[initialCallCount][0];
+        const auditLogCall = (logPHIAccess as jest.Mock).mock.calls.at(-1)?.[0];
+        expect(auditLogCall).toBeDefined();
 
         // Verify all required PHI access log fields are present
         const requiredFields = [
@@ -719,8 +719,8 @@ describe('Feature: log-peer-recovery-system, Property 3: Consent audit logging',
         expect(logPHIAccess).toHaveBeenCalled();
 
         // Get the audit log call that was just added
-        const calls = (logPHIAccess as jest.Mock).mock.calls;
-        const auditLogCall = calls[initialCallCount][0];
+        const auditLogCall = (logPHIAccess as jest.Mock).mock.calls.at(-1)?.[0];
+        expect(auditLogCall).toBeDefined();
 
         // Verify all required audit fields are present regardless of optional consent fields
         expect(auditLogCall.userId).toBe('test-user-id');
@@ -2312,8 +2312,8 @@ describe('Feature: log-peer-recovery-system, Property 6: Consent revocation bloc
         expect(finalCallCount).toBeGreaterThan(initialCallCount);
 
         // Get the most recent audit log call (the one we just made)
-        const calls = (logPHIAccess as jest.Mock).mock.calls;
-        const auditLogCall = calls[calls.length - 1][0];
+        const auditLogCall = (logPHIAccess as jest.Mock).mock.calls.at(-1)?.[0];
+        expect(auditLogCall).toBeDefined();
 
         // Verify audit log contains revocation details
         expect(auditLogCall.userId).toBe('test-user-id');
