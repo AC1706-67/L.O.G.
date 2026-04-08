@@ -65,7 +65,7 @@ export const DeepLinkHandler: React.FC<DeepLinkHandlerProps> = ({
       const { queryParams } = parsed;
 
       // Check if this is a Supabase auth callback
-      if (isSupabaseAuthCallback(queryParams)) {
+      if (queryParams && isSupabaseAuthCallback(queryParams)) {
         setIsProcessingLink(true);
         setLinkError(null);
 
@@ -152,7 +152,7 @@ export const DeepLinkHandler: React.FC<DeepLinkHandlerProps> = ({
     if (!session) {
       // If no session yet, try to exchange tokens manually
       if (params.access_token && params.refresh_token) {
-        const { data, error: setSessionError } = await supabase.auth.setSession({
+        const { error: setSessionError } = await supabase.auth.setSession({
           access_token: params.access_token,
           refresh_token: params.refresh_token,
         });
@@ -191,7 +191,7 @@ export const DeepLinkHandler: React.FC<DeepLinkHandlerProps> = ({
       // Navigate to the reset password screen
       // Use setTimeout to ensure navigation happens after the component is fully mounted
       setTimeout(() => {
-        navigation.navigate('Auth' as never, { screen: 'ResetPassword' } as never);
+        (navigation as any).navigate('Auth', { screen: 'ResetPassword' });
       }, 100);
     }
   };
